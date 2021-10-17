@@ -35,6 +35,7 @@ namespace KnapsackGeneticAlgorithm.Infrastructure.Extensions
         public static void AddRepositories(this IServiceCollection services)
         {
             services.AddScoped<IRepository, Repository>();
+            services.AddScoped<IScoreRepository, ScoreRepository>();
         }
 
         public static void AddServices(this IServiceCollection services)

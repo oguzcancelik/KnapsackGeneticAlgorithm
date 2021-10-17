@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using KnapsackGeneticAlgorithm.Data.Entities;
 using KnapsackGeneticAlgorithm.Data.Repositories.Abstractions;
-using KnapsackGeneticAlgorithm.Infrastructure.Constants;
 using KnapsackGeneticAlgorithm.Infrastructure.Mappings;
 using KnapsackGeneticAlgorithm.Models.Requests;
 using KnapsackGeneticAlgorithm.Models.Responses;
@@ -15,13 +14,13 @@ namespace KnapsackGeneticAlgorithm.Services
     public class KnapsackService : IKnapsackService
     {
         private readonly IGeneticAlgorithmService _geneticAlgorithmService;
-        private readonly IRepository _repository;
+        private readonly IScoreRepository _scoreRepository;
         private readonly List<List<int>> _profitRecord;
 
-        public KnapsackService(IGeneticAlgorithmService geneticAlgorithmService, IRepository repository)
+        public KnapsackService(IGeneticAlgorithmService geneticAlgorithmService, IScoreRepository scoreRepository)
         {
             _geneticAlgorithmService = geneticAlgorithmService;
-            _repository = repository;
+            _scoreRepository = scoreRepository;
             _profitRecord = new List<List<int>>();
         }
 
@@ -51,25 +50,9 @@ namespace KnapsackGeneticAlgorithm.Services
                 Result = $"[{string.Join(", ", fittest ?? new List<int>())}]"
             };
 
-            await UpdateOrInsertToDatabase(score);
+            await _scoreRepository.UpsertAsync(score);
 
             return score.ToResponse();
-        }
-
-        private async Task UpdateOrInsertToDatabase(Score currentScore)
-        {
-            var previousScore = await _repository.QueryFirstOrDefaultAsync<Score>(QueryConstants.GetScoreByNameQuery, new { currentScore.Name });
-
-            if (previousScore == null)
-            {
-                await _repository.InsertAsync(currentScore);
-            }
-            else if (currentScore.Profit > previousScore.Profit)
-            {
-                currentScore.Id = previousScore.Id;
-
-                await _repository.UpdateAsync(currentScore);
-            }
         }
 
         private bool ContinueProcess()
